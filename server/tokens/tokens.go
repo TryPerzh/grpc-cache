@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"os"
 	"sync"
@@ -31,7 +30,7 @@ func NewFrom(reader io.Reader) *Tokens {
 	r := csv.NewReader(reader)
 	records, err := r.ReadAll()
 	if err != nil {
-		log.Fatal(err)
+		panic(fmt.Errorf("failed to open reader %s", err))
 	}
 
 	for _, eachrecord := range records {
@@ -53,7 +52,7 @@ func NewFromFile(path string) *Tokens {
 	r := csv.NewReader(reader)
 	records, err := r.ReadAll()
 	if err != nil {
-		log.Fatal(err)
+		panic(fmt.Errorf("failed to open file %s", err))
 	}
 
 	for _, eachrecord := range records {
@@ -71,7 +70,6 @@ func (t *Tokens) WriteTo(writer io.Writer) (int64, error) {
 	records = append(records, t.users...)
 
 	w := csv.NewWriter(writer)
-	// w := csv.NewWriter(os.Stdout)
 	w.WriteAll(records)
 	if err := w.Error(); err != nil {
 		return 0, err
