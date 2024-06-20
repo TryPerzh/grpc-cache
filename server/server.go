@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	grpc_cache "github.com/TryPerzh/grpc-cache/proto/grpcCache"
-	"github.com/TryPerzh/grpc-cache/server/gocache"
+	"github.com/TryPerzh/grpc-cache/proto/grpcCache"
+	"github.com/TryPerzh/grpc-cache/server/cache"
 	"github.com/TryPerzh/grpc-cache/server/tokens"
 )
 
@@ -24,9 +24,9 @@ type Config struct {
 }
 
 type Server struct {
-	grpc_cache.CacheServiceServer
+	grpcCache.CacheServiceServer
 	Tokens *tokens.Tokens
-	Cahce  *gocache.Cache
+	Cahce  *cache.Cache
 	Port   string
 }
 
@@ -64,12 +64,12 @@ func NewWithConfig(conf Config) *Server {
 		cleanupCacheInterval = conf.CleanupCacheInterval
 	}
 
-	s.Cahce = gocache.New(defaultCacheExpiration, cleanupCacheInterval)
+	s.Cahce = cache.New(defaultCacheExpiration, cleanupCacheInterval)
 
 	return &s
 }
 
-func (s *Server) Login(ctx context.Context, req *grpc_cache.LoginRequest) (*grpc_cache.LoginResponse, error) {
+func (s *Server) Login(ctx context.Context, req *grpcCache.LoginRequest) (*grpcCache.LoginResponse, error) {
 
 	pass, f := s.Tokens.GetPassword(req.Login)
 	if !f {
@@ -85,12 +85,12 @@ func (s *Server) Login(ctx context.Context, req *grpc_cache.LoginRequest) (*grpc
 		return nil, err
 	}
 
-	return &grpc_cache.LoginResponse{
+	return &grpcCache.LoginResponse{
 		Token: tok,
 	}, nil
 }
 
-func (s *Server) Set(ctx context.Context, req *grpc_cache.SetRequest) (*emptypb.Empty, error) {
+func (s *Server) Set(ctx context.Context, req *grpcCache.SetRequest) (*emptypb.Empty, error) {
 
 	f, _ := s.Tokens.ValidToken(req.Token)
 
@@ -108,7 +108,7 @@ func (s *Server) Set(ctx context.Context, req *grpc_cache.SetRequest) (*emptypb.
 	return &emptypb.Empty{}, err
 }
 
-func (s *Server) Get(ctx context.Context, req *grpc_cache.GetRequest) (*grpc_cache.GetResponse, error) {
+func (s *Server) Get(ctx context.Context, req *grpcCache.GetRequest) (*grpcCache.GetResponse, error) {
 
 	f, _ := s.Tokens.ValidToken(req.Token)
 
@@ -122,10 +122,10 @@ func (s *Server) Get(ctx context.Context, req *grpc_cache.GetRequest) (*grpc_cac
 	if err != nil {
 		fmt.Println("json error - ", err)
 	}
-	return &grpc_cache.GetResponse{Value: b, Found: f}, nil
+	return &grpcCache.GetResponse{Value: b, Found: f}, nil
 }
 
-func (s *Server) Delete(ctx context.Context, req *grpc_cache.DeleteRequest) (*emptypb.Empty, error) {
+func (s *Server) Delete(ctx context.Context, req *grpcCache.DeleteRequest) (*emptypb.Empty, error) {
 
 	f, _ := s.Tokens.ValidToken(req.Token)
 
@@ -137,7 +137,7 @@ func (s *Server) Delete(ctx context.Context, req *grpc_cache.DeleteRequest) (*em
 	return &emptypb.Empty{}, nil
 }
 
-func (s *Server) Count(ctx context.Context, req *grpc_cache.CountRequest) (*grpc_cache.CountResponse, error) {
+func (s *Server) Count(ctx context.Context, req *grpcCache.CountRequest) (*grpcCache.CountResponse, error) {
 
 	f, _ := s.Tokens.ValidToken(req.Token)
 
@@ -147,7 +147,7 @@ func (s *Server) Count(ctx context.Context, req *grpc_cache.CountRequest) (*grpc
 
 	count := s.Cahce.Count()
 
-	return &grpc_cache.CountResponse{Count: int32(count)}, nil
+	return &grpcCache.CountResponse{Count: int32(count)}, nil
 }
 
 func (s *Server) RunServer() {
@@ -158,7 +158,7 @@ func (s *Server) RunServer() {
 	}
 
 	serv := grpc.NewServer()
-	grpc_cache.RegisterCacheServiceServer(serv, s)
+	grpcCache.RegisterCacheServiceServer(serv, s)
 	go func() {
 		if err := serv.Serve(listener); err != nil {
 			log.Fatalf("failed to serve: %v", err)
