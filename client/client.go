@@ -10,11 +10,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	grpc_cache "github.com/TryPerzh/grpc-cache/proto/grpcCache"
+	"github.com/TryPerzh/grpc-cache/proto/grpcCache"
 )
 
 type CacheClient struct {
-	cacheClient grpc_cache.CacheServiceClient
+	cacheClient grpcCache.CacheServiceClient
 	token       string
 	ip          string
 	port        string
@@ -39,8 +39,8 @@ func (cc *CacheClient) Connect() error {
 		return fmt.Errorf("client create : %v", err)
 	}
 
-	cc.cacheClient = grpc_cache.NewCacheServiceClient(conn)
-	resp, err := cc.cacheClient.Login(context.Background(), &grpc_cache.LoginRequest{Login: cc.login, Password: cc.password})
+	cc.cacheClient = grpcCache.NewCacheServiceClient(conn)
+	resp, err := cc.cacheClient.Login(context.Background(), &grpcCache.LoginRequest{Login: cc.login, Password: cc.password})
 	if err != nil {
 		conn.Close()
 		return fmt.Errorf("login error: %v", err)
@@ -61,7 +61,7 @@ func (cc *CacheClient) Set(key string, value interface{}, duration time.Duration
 		return
 	}
 
-	request := &grpc_cache.SetRequest{
+	request := &grpcCache.SetRequest{
 		Key:      key,
 		Value:    b,
 		Duration: durationpb.New(duration),
@@ -77,7 +77,7 @@ func (cc *CacheClient) Set(key string, value interface{}, duration time.Duration
 
 func (cc *CacheClient) Get(key string) (interface{}, bool) {
 
-	request := &grpc_cache.GetRequest{
+	request := &grpcCache.GetRequest{
 		Key:   key,
 		Token: cc.token,
 	}
@@ -103,7 +103,7 @@ func (cc *CacheClient) Get(key string) (interface{}, bool) {
 
 func (cc *CacheClient) Delete(key string) {
 
-	request := &grpc_cache.DeleteRequest{
+	request := &grpcCache.DeleteRequest{
 		Key:   key,
 		Token: cc.token,
 	}
@@ -117,7 +117,7 @@ func (cc *CacheClient) Delete(key string) {
 
 func (cc *CacheClient) Count(key string) int {
 
-	request := &grpc_cache.CountRequest{
+	request := &grpcCache.CountRequest{
 		Token: cc.token,
 	}
 
