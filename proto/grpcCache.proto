@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+option go_package = "/grpcCache";
+//option go_package = "github.com/TryPerzh/grpc-cache/proto/grpc-cache";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/Empty.proto";
+
+service CacheService {
+    rpc Login(LoginRequest) returns (LoginResponse) {}
+    rpc Set(SetRequest) returns (google.protobuf.Empty) {} 
+    rpc Get(GetRequest) returns (GetResponse) {}
+    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+    rpc Count(CountRequest) returns (CountResponse) {}
+}
+
+message LoginRequest {
+    string login = 1; 
+    string password = 2;
+}
+  
+message LoginResponse {
+    string token = 1; 
+}
+
+message SetRequest{
+    string key = 1; 
+    bytes value = 2;
+    google.protobuf.Duration duration = 3;
+    string token = 4;
+}
+
+message GetRequest{
+    string key = 1;
+    string token = 2;
+}
+
+message GetResponse{
+    bytes value = 1;
+    bool found = 2;
+}
+
+message DeleteRequest{
+    string key = 1;
+    string token = 2;
+}
+
+message CountRequest{
+    string token = 1;
+}
+
+message CountResponse{
+    int32 count = 1;
+}
