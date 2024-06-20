@@ -1,7 +1,7 @@
-# Implementation of a simple cache via gRPC.
+## Implementation of a simple cache via gRPC.
 This package implements a client and server to create a cache that exchanges data via gRPC.
 
-## Example Usage Server
+### Example Usage Server
 ```
 import gS "github.com/TryPerzh/grpc-cache/server"
 
@@ -15,7 +15,7 @@ server = gS.NewWithConfig(gS.Config{
 server.Tokens.AddUser("testlogin", "testpassword")
 server.RunServer()
 ```
-## Example Usage Client
+### Example Usage Client
 ```
 import gC "github.com/TryPerzh/grpc-cache/client"
 
