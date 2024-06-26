@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/TryPerzh/grpc-cache/cache"
 	"github.com/TryPerzh/grpc-cache/proto/grpcCache"
-	"github.com/TryPerzh/grpc-cache/server/cache"
 	"github.com/TryPerzh/grpc-cache/server/tokens"
 )
 
@@ -104,7 +104,7 @@ func (s *Server) Set(ctx context.Context, req *grpcCache.SetRequest) (*emptypb.E
 		return nil, err
 	}
 
-	err = s.Cahce.Set(req.Key, value, req.Duration.AsDuration())
+	s.Cahce.Set(req.Key, value, req.Duration.AsDuration())
 	return &emptypb.Empty{}, err
 }
 

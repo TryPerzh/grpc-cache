@@ -2,11 +2,11 @@ package cache
 
 import "time"
 
-func (c *Cache) StartGC() {
-	go c.GC()
+func (c *Cache) startGC() {
+	go c.gC()
 }
 
-func (c *Cache) GC() {
+func (c *Cache) gC() {
 
 	for {
 		<-time.After(c.cleanupInterval)
@@ -23,24 +23,21 @@ func (c *Cache) GC() {
 
 func (c *Cache) expiredKeys() (keys []string) {
 
-	c.RLock()
-	defer c.RUnlock()
-
+	c.mutex.RLock()
 	for k, i := range c.items {
 		if time.Now().UnixNano() > i.Expiration && i.Expiration > 0 {
 			keys = append(keys, k)
 		}
 	}
-
+	c.mutex.RUnlock()
 	return
 }
 
 func (c *Cache) clearItems(keys []string) {
 
-	c.Lock()
-	defer c.Unlock()
-
+	c.mutex.Lock()
 	for _, k := range keys {
 		delete(c.items, k)
 	}
+	c.mutex.Unlock()
 }
