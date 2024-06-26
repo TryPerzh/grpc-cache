@@ -21,6 +21,7 @@ type CacheClient struct {
 	login       string
 	password    string
 	err         error
+	conn        *grpc.ClientConn
 }
 
 func New(ip string, port string, login string, password string) *CacheClient {
@@ -34,23 +35,29 @@ func New(ip string, port string, login string, password string) *CacheClient {
 
 func (cc *CacheClient) Connect() error {
 
-	conn, err := grpc.NewClient(cc.ip+":"+cc.port, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	var err error = nil
+	cc.conn, err = grpc.NewClient(cc.ip+":"+cc.port, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("client create : %v", err)
 	}
 
-	cc.cacheClient = grpcCache.NewCacheServiceClient(conn)
+	cc.cacheClient = grpcCache.NewCacheServiceClient(cc.conn)
 	resp, err := cc.cacheClient.Login(context.Background(), &grpcCache.LoginRequest{Login: cc.login, Password: cc.password})
 	if err != nil {
-		conn.Close()
+		cc.conn.Close()
 		return fmt.Errorf("login error: %v", err)
 	}
 	if resp.Token == "" {
-		conn.Close()
+		cc.conn.Close()
 		return fmt.Errorf("token receipt error")
 	}
 	cc.token = resp.Token
 	return nil
+}
+
+func (cc *CacheClient) Close() error {
+
+	return cc.conn.Close()
 }
 
 func (cc *CacheClient) Set(key string, value interface{}, duration time.Duration) {
@@ -61,7 +68,7 @@ func (cc *CacheClient) Set(key string, value interface{}, duration time.Duration
 		return
 	}
 
-	request := &grpcCache.SetRequest{
+	request := &grpcCache.KeyValueDurationRequest{
 		Key:      key,
 		Value:    b,
 		Duration: durationpb.New(duration),
@@ -75,9 +82,53 @@ func (cc *CacheClient) Set(key string, value interface{}, duration time.Duration
 	}
 }
 
+func (cc *CacheClient) Add(key string, value interface{}, duration time.Duration) {
+
+	b, err := json.Marshal(value)
+	if err != nil {
+		cc.setError(fmt.Errorf("conversion to json: %v", err))
+		return
+	}
+
+	request := &grpcCache.KeyValueDurationRequest{
+		Key:      key,
+		Value:    b,
+		Duration: durationpb.New(duration),
+		Token:    cc.token,
+	}
+
+	_, err = cc.cacheClient.Add(context.Background(), request)
+	if err != nil {
+		cc.setError(err)
+		return
+	}
+}
+
+func (cc *CacheClient) Replace(key string, value interface{}, duration time.Duration) {
+
+	b, err := json.Marshal(value)
+	if err != nil {
+		cc.setError(fmt.Errorf("conversion to json: %v", err))
+		return
+	}
+
+	request := &grpcCache.KeyValueDurationRequest{
+		Key:      key,
+		Value:    b,
+		Duration: durationpb.New(duration),
+		Token:    cc.token,
+	}
+
+	_, err = cc.cacheClient.Replace(context.Background(), request)
+	if err != nil {
+		cc.setError(err)
+		return
+	}
+}
+
 func (cc *CacheClient) Get(key string) (interface{}, bool) {
 
-	request := &grpcCache.GetRequest{
+	request := &grpcCache.KeyRequest{
 		Key:   key,
 		Token: cc.token,
 	}
@@ -103,7 +154,7 @@ func (cc *CacheClient) Get(key string) (interface{}, bool) {
 
 func (cc *CacheClient) Delete(key string) {
 
-	request := &grpcCache.DeleteRequest{
+	request := &grpcCache.KeyRequest{
 		Key:   key,
 		Token: cc.token,
 	}
@@ -115,7 +166,7 @@ func (cc *CacheClient) Delete(key string) {
 	}
 }
 
-func (cc *CacheClient) Count(key string) int {
+func (cc *CacheClient) Count(key string) int64 {
 
 	request := &grpcCache.CountRequest{
 		Token: cc.token,
@@ -127,7 +178,7 @@ func (cc *CacheClient) Count(key string) int {
 		return -1
 	}
 
-	return int(resp.Count)
+	return resp.Count
 }
 
 func (cc *CacheClient) Error() error {

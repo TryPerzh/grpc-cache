@@ -20,11 +20,13 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	CacheService_Login_FullMethodName  = "/CacheService/Login"
-	CacheService_Set_FullMethodName    = "/CacheService/Set"
-	CacheService_Get_FullMethodName    = "/CacheService/Get"
-	CacheService_Delete_FullMethodName = "/CacheService/Delete"
-	CacheService_Count_FullMethodName  = "/CacheService/Count"
+	CacheService_Login_FullMethodName   = "/CacheService/Login"
+	CacheService_Set_FullMethodName     = "/CacheService/Set"
+	CacheService_Add_FullMethodName     = "/CacheService/Add"
+	CacheService_Replace_FullMethodName = "/CacheService/Replace"
+	CacheService_Get_FullMethodName     = "/CacheService/Get"
+	CacheService_Delete_FullMethodName  = "/CacheService/Delete"
+	CacheService_Count_FullMethodName   = "/CacheService/Count"
 )
 
 // CacheServiceClient is the client API for CacheService service.
@@ -32,9 +34,11 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CacheServiceClient interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
-	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
-	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Set(ctx context.Context, in *KeyValueDurationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Add(ctx context.Context, in *KeyValueDurationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Replace(ctx context.Context, in *KeyValueDurationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Get(ctx context.Context, in *KeyRequest, opts ...grpc.CallOption) (*GetResponse, error)
+	Delete(ctx context.Context, in *KeyRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Count(ctx context.Context, in *CountRequest, opts ...grpc.CallOption) (*CountResponse, error)
 }
 
@@ -56,7 +60,7 @@ func (c *cacheServiceClient) Login(ctx context.Context, in *LoginRequest, opts .
 	return out, nil
 }
 
-func (c *cacheServiceClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *cacheServiceClient) Set(ctx context.Context, in *KeyValueDurationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, CacheService_Set_FullMethodName, in, out, cOpts...)
@@ -66,7 +70,27 @@ func (c *cacheServiceClient) Set(ctx context.Context, in *SetRequest, opts ...gr
 	return out, nil
 }
 
-func (c *cacheServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+func (c *cacheServiceClient) Add(ctx context.Context, in *KeyValueDurationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, CacheService_Add_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheServiceClient) Replace(ctx context.Context, in *KeyValueDurationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, CacheService_Replace_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheServiceClient) Get(ctx context.Context, in *KeyRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetResponse)
 	err := c.cc.Invoke(ctx, CacheService_Get_FullMethodName, in, out, cOpts...)
@@ -76,7 +100,7 @@ func (c *cacheServiceClient) Get(ctx context.Context, in *GetRequest, opts ...gr
 	return out, nil
 }
 
-func (c *cacheServiceClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *cacheServiceClient) Delete(ctx context.Context, in *KeyRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, CacheService_Delete_FullMethodName, in, out, cOpts...)
@@ -101,9 +125,11 @@ func (c *cacheServiceClient) Count(ctx context.Context, in *CountRequest, opts .
 // for forward compatibility
 type CacheServiceServer interface {
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
-	Set(context.Context, *SetRequest) (*emptypb.Empty, error)
-	Get(context.Context, *GetRequest) (*GetResponse, error)
-	Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error)
+	Set(context.Context, *KeyValueDurationRequest) (*emptypb.Empty, error)
+	Add(context.Context, *KeyValueDurationRequest) (*emptypb.Empty, error)
+	Replace(context.Context, *KeyValueDurationRequest) (*emptypb.Empty, error)
+	Get(context.Context, *KeyRequest) (*GetResponse, error)
+	Delete(context.Context, *KeyRequest) (*emptypb.Empty, error)
 	Count(context.Context, *CountRequest) (*CountResponse, error)
 	mustEmbedUnimplementedCacheServiceServer()
 }
@@ -115,13 +141,19 @@ type UnimplementedCacheServiceServer struct {
 func (UnimplementedCacheServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedCacheServiceServer) Set(context.Context, *SetRequest) (*emptypb.Empty, error) {
+func (UnimplementedCacheServiceServer) Set(context.Context, *KeyValueDurationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
 }
-func (UnimplementedCacheServiceServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
+func (UnimplementedCacheServiceServer) Add(context.Context, *KeyValueDurationRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
+}
+func (UnimplementedCacheServiceServer) Replace(context.Context, *KeyValueDurationRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Replace not implemented")
+}
+func (UnimplementedCacheServiceServer) Get(context.Context, *KeyRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedCacheServiceServer) Delete(context.Context, *DeleteRequest) (*emptypb.Empty, error) {
+func (UnimplementedCacheServiceServer) Delete(context.Context, *KeyRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 func (UnimplementedCacheServiceServer) Count(context.Context, *CountRequest) (*CountResponse, error) {
@@ -159,7 +191,7 @@ func _CacheService_Login_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _CacheService_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetRequest)
+	in := new(KeyValueDurationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -171,13 +203,49 @@ func _CacheService_Set_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: CacheService_Set_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServiceServer).Set(ctx, req.(*SetRequest))
+		return srv.(CacheServiceServer).Set(ctx, req.(*KeyValueDurationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CacheService_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeyValueDurationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServiceServer).Add(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CacheService_Add_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServiceServer).Add(ctx, req.(*KeyValueDurationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CacheService_Replace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeyValueDurationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServiceServer).Replace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CacheService_Replace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServiceServer).Replace(ctx, req.(*KeyValueDurationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CacheService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRequest)
+	in := new(KeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -189,13 +257,13 @@ func _CacheService_Get_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: CacheService_Get_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServiceServer).Get(ctx, req.(*GetRequest))
+		return srv.(CacheServiceServer).Get(ctx, req.(*KeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CacheService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteRequest)
+	in := new(KeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -207,7 +275,7 @@ func _CacheService_Delete_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: CacheService_Delete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServiceServer).Delete(ctx, req.(*DeleteRequest))
+		return srv.(CacheServiceServer).Delete(ctx, req.(*KeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -244,6 +312,14 @@ var CacheService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Set",
 			Handler:    _CacheService_Set_Handler,
+		},
+		{
+			MethodName: "Add",
+			Handler:    _CacheService_Add_Handler,
+		},
+		{
+			MethodName: "Replace",
+			Handler:    _CacheService_Replace_Handler,
 		},
 		{
 			MethodName: "Get",

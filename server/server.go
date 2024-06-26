@@ -90,7 +90,7 @@ func (s *Server) Login(ctx context.Context, req *grpcCache.LoginRequest) (*grpcC
 	}, nil
 }
 
-func (s *Server) Set(ctx context.Context, req *grpcCache.SetRequest) (*emptypb.Empty, error) {
+func (s *Server) Set(ctx context.Context, req *grpcCache.KeyValueDurationRequest) (*emptypb.Empty, error) {
 
 	f, _ := s.Tokens.ValidToken(req.Token)
 
@@ -108,7 +108,43 @@ func (s *Server) Set(ctx context.Context, req *grpcCache.SetRequest) (*emptypb.E
 	return &emptypb.Empty{}, err
 }
 
-func (s *Server) Get(ctx context.Context, req *grpcCache.GetRequest) (*grpcCache.GetResponse, error) {
+func (s *Server) Add(ctx context.Context, req *grpcCache.KeyValueDurationRequest) (*emptypb.Empty, error) {
+
+	f, _ := s.Tokens.ValidToken(req.Token)
+
+	if !f {
+		return nil, fmt.Errorf("wrong token")
+	}
+
+	var value interface{}
+	err := json.Unmarshal(req.Value, &value)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.Cahce.Add(req.Key, value, req.Duration.AsDuration())
+	return &emptypb.Empty{}, err
+}
+
+func (s *Server) Replace(ctx context.Context, req *grpcCache.KeyValueDurationRequest) (*emptypb.Empty, error) {
+
+	f, _ := s.Tokens.ValidToken(req.Token)
+
+	if !f {
+		return nil, fmt.Errorf("wrong token")
+	}
+
+	var value interface{}
+	err := json.Unmarshal(req.Value, &value)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.Cahce.Replace(req.Key, value, req.Duration.AsDuration())
+	return &emptypb.Empty{}, err
+}
+
+func (s *Server) Get(ctx context.Context, req *grpcCache.KeyRequest) (*grpcCache.GetResponse, error) {
 
 	f, _ := s.Tokens.ValidToken(req.Token)
 
@@ -125,7 +161,7 @@ func (s *Server) Get(ctx context.Context, req *grpcCache.GetRequest) (*grpcCache
 	return &grpcCache.GetResponse{Value: b, Found: f}, nil
 }
 
-func (s *Server) Delete(ctx context.Context, req *grpcCache.DeleteRequest) (*emptypb.Empty, error) {
+func (s *Server) Delete(ctx context.Context, req *grpcCache.KeyRequest) (*emptypb.Empty, error) {
 
 	f, _ := s.Tokens.ValidToken(req.Token)
 
@@ -147,7 +183,7 @@ func (s *Server) Count(ctx context.Context, req *grpcCache.CountRequest) (*grpcC
 
 	count := s.Cahce.Count()
 
-	return &grpcCache.CountResponse{Count: int32(count)}, nil
+	return &grpcCache.CountResponse{Count: int64(count)}, nil
 }
 
 func (s *Server) RunServer() {

@@ -8,9 +8,12 @@ import "google/protobuf/Empty.proto";
 
 service CacheService {
     rpc Login(LoginRequest) returns (LoginResponse) {}
-    rpc Set(SetRequest) returns (google.protobuf.Empty) {} 
-    rpc Get(GetRequest) returns (GetResponse) {}
-    rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {}
+    rpc Set(KeyValueDurationRequest) returns (google.protobuf.Empty) {} 
+    rpc Add(KeyValueDurationRequest) returns (google.protobuf.Empty) {} 
+    rpc Replace(KeyValueDurationRequest) returns (google.protobuf.Empty) {} 
+
+    rpc Get(KeyRequest) returns (GetResponse) {}
+    rpc Delete(KeyRequest) returns (google.protobuf.Empty) {}
     rpc Count(CountRequest) returns (CountResponse) {}
 }
 
@@ -23,14 +26,7 @@ message LoginResponse {
     string token = 1; 
 }
 
-message SetRequest{
-    string key = 1; 
-    bytes value = 2;
-    google.protobuf.Duration duration = 3;
-    string token = 4;
-}
-
-message GetRequest{
+message KeyRequest{
     string key = 1;
     string token = 2;
 }
@@ -40,15 +36,17 @@ message GetResponse{
     bool found = 2;
 }
 
-message DeleteRequest{
-    string key = 1;
-    string token = 2;
-}
-
 message CountRequest{
     string token = 1;
 }
 
 message CountResponse{
-    int32 count = 1;
+    int64 count = 1;
+}
+
+message KeyValueDurationRequest{
+    string key = 1; 
+    bytes value = 2;
+    google.protobuf.Duration duration = 3;
+    string token = 4;
 }

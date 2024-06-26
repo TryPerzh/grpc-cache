@@ -93,15 +93,8 @@ func (c *Cache) Replace(key string, value interface{}, duration time.Duration) e
 		c.mutex.Unlock()
 		return fmt.Errorf("item %s doesn't exist", key)
 	}
-	var expiration int64
-	if duration == 0 {
-		duration = c.defaultExpiration
-	}
 
-	if duration > 0 {
-		expiration = time.Now().Add(duration).UnixNano()
-	}
-	c.set(key, value, expiration)
+	c.Set(key, value, duration)
 	c.mutex.Unlock()
 	return nil
 }
