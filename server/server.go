@@ -2,12 +2,12 @@ package grpccacheserver
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"time"
 
+	"github.com/fxamacker/cbor/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -99,7 +99,7 @@ func (s *Server) Set(ctx context.Context, req *grpcCache.KeyValueDurationRequest
 	}
 
 	var value interface{}
-	err := json.Unmarshal(req.Value, &value)
+	err := cbor.Unmarshal(req.Value, &value)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (s *Server) Add(ctx context.Context, req *grpcCache.KeyValueDurationRequest
 	}
 
 	var value interface{}
-	err := json.Unmarshal(req.Value, &value)
+	err := cbor.Unmarshal(req.Value, &value)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (s *Server) Replace(ctx context.Context, req *grpcCache.KeyValueDurationReq
 	}
 
 	var value interface{}
-	err := json.Unmarshal(req.Value, &value)
+	err := cbor.Unmarshal(req.Value, &value)
 	if err != nil {
 		return nil, err
 	}
@@ -153,10 +153,9 @@ func (s *Server) Get(ctx context.Context, req *grpcCache.KeyRequest) (*grpcCache
 	}
 
 	item, f := s.Cahce.Get(req.Key)
-
-	b, err := json.Marshal(item)
+	b, err := cbor.Marshal(item)
 	if err != nil {
-		fmt.Println("json error - ", err)
+		fmt.Println("cbor error - ", err)
 	}
 	return &grpcCache.GetResponse{Value: b, Found: f}, nil
 }

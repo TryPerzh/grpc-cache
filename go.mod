@@ -7,7 +7,10 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
+require github.com/x448/float16 v0.8.4 // indirect
+
 require (
+	github.com/fxamacker/cbor/v2 v2.7.0
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

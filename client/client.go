@@ -2,10 +2,10 @@ package grpccache
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/fxamacker/cbor/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -62,9 +62,9 @@ func (cc *CacheClient) Close() error {
 
 func (cc *CacheClient) Set(key string, value interface{}, duration time.Duration) {
 
-	b, err := json.Marshal(value)
+	b, err := cbor.Marshal(value)
 	if err != nil {
-		cc.setError(fmt.Errorf("conversion to json: %v", err))
+		cc.setError(fmt.Errorf("conversion to cbor: %v", err))
 		return
 	}
 
@@ -84,9 +84,9 @@ func (cc *CacheClient) Set(key string, value interface{}, duration time.Duration
 
 func (cc *CacheClient) Add(key string, value interface{}, duration time.Duration) {
 
-	b, err := json.Marshal(value)
+	b, err := cbor.Marshal(value)
 	if err != nil {
-		cc.setError(fmt.Errorf("conversion to json: %v", err))
+		cc.setError(fmt.Errorf("conversion to cbor: %v", err))
 		return
 	}
 
@@ -106,9 +106,9 @@ func (cc *CacheClient) Add(key string, value interface{}, duration time.Duration
 
 func (cc *CacheClient) Replace(key string, value interface{}, duration time.Duration) {
 
-	b, err := json.Marshal(value)
+	b, err := cbor.Marshal(value)
 	if err != nil {
-		cc.setError(fmt.Errorf("conversion to json: %v", err))
+		cc.setError(fmt.Errorf("conversion to cbor: %v", err))
 		return
 	}
 
@@ -141,9 +141,9 @@ func (cc *CacheClient) Get(key string) (interface{}, bool) {
 
 	if resp.Found {
 		var result interface{}
-		err = json.Unmarshal(resp.Value, &result)
+		err = cbor.Unmarshal(resp.Value, &result)
 		if err != nil {
-			cc.setError(fmt.Errorf("conversion from json: %v", err))
+			cc.setError(fmt.Errorf("conversion from cbor: %v", err))
 			return nil, false
 		}
 		return result, resp.Found
