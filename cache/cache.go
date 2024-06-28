@@ -87,15 +87,11 @@ func (c *Cache) Add(key string, value interface{}, duration time.Duration) error
 }
 
 func (c *Cache) Replace(key string, value interface{}, duration time.Duration) error {
-	c.mutex.Lock()
 	_, found := c.Get(key)
 	if !found {
-		c.mutex.Unlock()
 		return fmt.Errorf("item %s doesn't exist", key)
 	}
-
 	c.Set(key, value, duration)
-	c.mutex.Unlock()
 	return nil
 }
 
